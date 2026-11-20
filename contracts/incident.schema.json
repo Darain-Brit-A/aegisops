@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegisops.local/contracts/incident.schema.json",
+  "title": "AegisOps Correlated Incident & Explainable Recommendation Contract",
+  "description": "Strict contract for correlated AIOps incidents, deterministic evidence scoring, explainable recommendations, and simulated human-approved remediation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "incident_id",
+    "tenant_id",
+    "environment_id",
+    "region_id",
+    "title",
+    "status",
+    "severity",
+    "first_observed_utc",
+    "last_observed_utc",
+    "affected_sources",
+    "correlation_rule",
+    "correlation_explanation",
+    "probable_cause",
+    "uncertainty_note",
+    "evidence_score",
+    "evidence_score_formula",
+    "contributing_signals",
+    "recommendations"
+  ],
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "environment_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "region_id": {
+      "type": "string",
+      "enum": ["ap-south-1", "eu-central-1", "us-east-1", "us-west-2"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "acknowledged", "mitigated_simulated", "resolved"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warning", "high", "critical"]
+    },
+    "first_observed_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_observed_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "alert_created_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when incident/alert was raised, used to measure threshold-breach-to-alert latency."
+    },
+    "affected_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^src_[a-f0-9]{16,32}$"
+      }
+    },
+    "correlation_rule": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "correlation_explanation": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "probable_cause": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "uncertainty_note": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "evidence_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Deterministic evidence-strength score (0-100), NOT a fabricated ML probability."
+    },
+    "evidence_score_formula": {
+      "type": "string",
+      "description": "Explicit human-readable formula explaining how evidence_score was computed."
+    },
+    "contributing_signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "payload_id",
+          "source_id",
+          "event_category",
+          "metric_name",
+          "metric_value",
+          "detector_method",
+          "event_time_utc"
+        ],
+        "properties": {
+          "payload_id": { "type": "string", "format": "uuid" },
+          "source_id": { "type": "string", "pattern": "^src_[a-f0-9]{16,32}$" },
+          "event_category": { "type": "string" },
+          "metric_name": { "type": "string" },
+          "metric_value": { "type": "number" },
+          "baseline_median": { "type": ["number", "null"] },
+          "baseline_mad": { "type": ["number", "null"] },
+          "robust_z_score": { "type": ["number", "null"] },
+          "detector_method": {
+            "type": "string",
+            "enum": ["static_threshold", "rolling_mad_baseline", "security_burst_rule", "collector_stale_rule"]
+          },
+          "event_time_utc": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recommendation_id",
+          "incident_id",
+          "title",
+          "detector_responsible",
+          "probable_explanation",
+          "suggested_investigation",
+          "expected_benefit",
+          "risk_or_uncertainty",
+          "evidence_strength",
+          "evidence_timestamps_utc",
+          "simulated_remediation_available"
+        ],
+        "properties": {
+          "recommendation_id": { "type": "string", "format": "uuid" },
+          "incident_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "detector_responsible": { "type": "string" },
+          "probable_explanation": { "type": "string" },
+          "suggested_investigation": { "type": "string" },
+          "expected_benefit": { "type": "string" },
+          "risk_or_uncertainty": { "type": "string" },
+          "evidence_strength": { "type": "string", "enum": ["Low", "Moderate", "Strong"] },
+          "evidence_timestamps_utc": {
+            "type": "array",
+            "items": { "type": "string", "format": "date-time" }
+          },
+          "simulated_remediation_available": { "type": "boolean" },
+          "simulated_action_code": { "type": ["string", "null"] },
+          "rollback_plan": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

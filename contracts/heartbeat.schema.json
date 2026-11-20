@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegisops.local/contracts/heartbeat.schema.json",
+  "title": "AegisOps Collector Heartbeat Payload",
+  "description": "Strict schema for periodic Tier 1 collector health and outbox status heartbeats sent to Tier 2 SaaS.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "collector_id",
+    "tenant_id",
+    "environment_id",
+    "region_id",
+    "collector_version",
+    "config_status",
+    "policy_version",
+    "sent_at_utc",
+    "pending_outbox_count",
+    "retry_count",
+    "last_delivery_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "collector_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "environment_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "region_id": {
+      "type": "string",
+      "enum": ["ap-south-1", "eu-central-1", "us-east-1", "us-west-2"]
+    },
+    "collector_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.]+)?$"
+    },
+    "config_status": {
+      "type": "string",
+      "enum": ["valid", "degraded", "policy_mismatch"]
+    },
+    "policy_version": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?$"
+    },
+    "sent_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?(Z|\\+00:00)$"
+    },
+    "pending_outbox_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retry_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_delivery_status": {
+      "type": "string",
+      "enum": ["ok", "retrying", "offline", "rejected", "idle"]
+    },
+    "collector_cpu_percent": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "collector_memory_mb": {
+      "type": ["number", "null"],
+      "minimum": 0
+    }
+  }
+}

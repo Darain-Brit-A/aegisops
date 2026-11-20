@@ -1,0 +1,112 @@
+{
+  "fixture_notice": "Synthetic local development and judge demonstration test fixtures ONLY. NOT the organizer-provided telemetry stream. All secrets are harmless synthetic demo strings.",
+  "events": [
+    {
+      "scenario_id": "raw_secret",
+      "adapter": "simulator",
+      "hostname": "prod-payments-db-01.internal",
+      "ip_address": "10.42.8.19",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:00:00Z",
+      "event_category": "infrastructure",
+      "metric_name": "cpu_usage_percent",
+      "metric_value": 42.5,
+      "metric_unit": "percent",
+      "raw_log": "2026-11-20T14:30:00+05:30 INFO db-sync completed user=svc_billing api_token=AEGIS_DEMO_SECRET_TOKEN_9F2A password=SYNTHETIC_DEMO_PASS_01",
+      "password": "SYNTHETIC_DEMO_PASS_01",
+      "api_key": "AEGIS_DEMO_SECRET_TOKEN_9F2A"
+    },
+    {
+      "scenario_id": "failed_logins",
+      "adapter": "simulator",
+      "hostname": "bastion-edge-02.internal",
+      "source_ip": "198.51.100.77",
+      "username": "root_demo_user",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:01:00Z",
+      "event_category": "security",
+      "metric_name": "failed_auth_attempts_count",
+      "metric_value": 27,
+      "metric_unit": "count",
+      "raw_log": "sshd[9012]: Failed password for root_demo_user from 198.51.100.77 port 52910 ssh2 (27 attempts in 60s)"
+    },
+    {
+      "scenario_id": "network_latency",
+      "adapter": "simulator",
+      "hostname": "gw-blr-core-01.internal",
+      "ip_address": "10.42.1.1",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:02:00Z",
+      "event_category": "network",
+      "metric_name": "network_latency_ms",
+      "metric_value": 248.6,
+      "metric_unit": "ms",
+      "raw_log": "netprobe: uplink rtt=248.6ms peer=10.42.1.254 packet_loss=3.8%"
+    },
+    {
+      "scenario_id": "cpu_baseline_deviation",
+      "adapter": "simulator",
+      "hostname": "app-checkout-01.internal",
+      "ip_address": "10.42.4.12",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:02:10Z",
+      "event_category": "infrastructure",
+      "metric_name": "cpu_usage_percent",
+      "metric_value": 96.2,
+      "metric_unit": "percent",
+      "raw_log": "kernel: cpu saturation worker_pool=checkout-api load_avg=14.8"
+    },
+    {
+      "scenario_id": "correlated_incident",
+      "adapter": "simulator",
+      "hostname": "app-checkout-01.internal",
+      "ip_address": "10.42.4.12",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:02:20Z",
+      "event_category": "infrastructure",
+      "metric_name": "memory_usage_percent",
+      "metric_value": 93.4,
+      "metric_unit": "percent",
+      "raw_log": "oom-guard: heap pressure 93.4% pid=4412 service=checkout-api"
+    },
+    {
+      "scenario_id": "correlated_incident",
+      "adapter": "simulator",
+      "hostname": "app-checkout-01.internal",
+      "ip_address": "10.42.4.12",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:02:25Z",
+      "event_category": "network",
+      "metric_name": "network_packet_loss_percent",
+      "metric_value": 11.2,
+      "metric_unit": "percent",
+      "raw_log": "eth0: rx_dropped=1420 loss_pct=11.2%"
+    },
+    {
+      "scenario_id": "duplicate_out_of_order",
+      "adapter": "simulator",
+      "hostname": "edge-nyc-01.internal",
+      "ip_address": "10.99.2.15",
+      "source_timezone": "America/New_York",
+      "event_time_utc": "2026-11-20T08:55:00Z",
+      "event_category": "infrastructure",
+      "metric_name": "cpu_usage_percent",
+      "metric_value": 51.0,
+      "metric_unit": "percent",
+      "raw_log": "delayed telemetry sample from America/New_York arriving out of order"
+    },
+    {
+      "scenario_id": "saas_outage",
+      "adapter": "simulator",
+      "hostname": "app-checkout-01.internal",
+      "ip_address": "10.42.4.12",
+      "source_timezone": "Asia/Kolkata",
+      "event_time_utc": "2026-11-20T09:05:00Z",
+      "event_category": "infrastructure",
+      "metric_name": "disk_usage_percent",
+      "metric_value": 68.0,
+      "metric_unit": "percent",
+      "raw_log": "buffered during simulated SaaS outage; must arrive with zero loss and zero duplicates"
+    }
+  ]
+}

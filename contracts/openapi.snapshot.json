@@ -1,0 +1,234 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AegisOps SaaS & Local Inspection API Contract",
+    "version": "1.0.0",
+    "description": "Shared API contract between Tier 1 Local Collector (Sherwin), Tier 2 SaaS Backend (Praveen), and Operations Dashboard (Darain). SaaS endpoints run on :8000 (/api/v1/*). Local-only Collector Egress Proof endpoints run exclusively on 127.0.0.1:8001 and are NEVER called by SaaS."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Tier 2 Central SaaS Backend (Local Development)"
+    },
+    {
+      "url": "http://127.0.0.1:8001",
+      "description": "Tier 1 Local Collector Inspection API (Local-Only — NEVER exposed to SaaS)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "CollectorTokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Collector-Token",
+        "description": "Collector-specific credential bound server-side to (tenant_id, collector_id)."
+      },
+      "OperatorTokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Tenant-Token",
+        "description": "Tenant-scoped dashboard operator credential."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error_code", "message"],
+        "properties": {
+          "error_code": { "type": "string" },
+          "message": { "type": "string" },
+          "details": { "type": "object" }
+        }
+      },
+      "IngestAckResponse": {
+        "type": "object",
+        "required": ["status", "payload_id", "tenant_id", "payload_sha256", "accepted_at_utc", "duplicate"],
+        "properties": {
+          "status": { "type": "string", "enum": ["accepted", "duplicate_ignored"] },
+          "payload_id": { "type": "string", "format": "uuid" },
+          "tenant_id": { "type": "string" },
+          "payload_sha256": { "type": "string" },
+          "accepted_at_utc": { "type": "string", "format": "date-time" },
+          "duplicate": { "type": "boolean" },
+          "out_of_order": { "type": "boolean" }
+        }
+      },
+      "RemediationApprovalRequest": {
+        "type": "object",
+        "required": ["operator_id", "justification", "confirm_simulation"],
+        "properties": {
+          "operator_id": { "type": "string" },
+          "justification": { "type": "string" },
+          "confirm_simulation": { "type": "boolean", "const": true }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Service liveness health check",
+        "responses": {
+          "200": { "description": "Service is alive" }
+        }
+      }
+    },
+    "/api/v1/ingest/telemetry": {
+      "post": {
+        "summary": "Ingest single or batch allow-listed metadata payload from Tier 1 collector",
+        "security": [{ "CollectorTokenAuth": [] }],
+        "description": "Strictly validates payload against contracts/metadata.schema.json (additionalProperties=false), enforces server-bound tenant_id, verifies idempotency on (tenant_id, payload_id), persists to PostgreSQL, and triggers health/anomaly/correlation pipeline.",
+        "responses": {
+          "201": { "description": "Metadata payload accepted and persisted" },
+          "200": { "description": "Duplicate payload_id acknowledged idempotently without duplicating storage" },
+          "401": { "description": "Missing or invalid collector credential" },
+          "403": { "description": "Declared tenant_id or collector_id does not match authenticated credential" },
+          "422": { "description": "Strict schema validation failure (e.g., unknown/unapproved field rejected)" }
+        }
+      }
+    },
+    "/api/v1/ingest/heartbeat": {
+      "post": {
+        "summary": "Receive periodic collector heartbeat and outbox depth",
+        "security": [{ "CollectorTokenAuth": [] }],
+        "responses": {
+          "200": { "description": "Heartbeat recorded" },
+          "401": { "description": "Invalid collector token" },
+          "403": { "description": "Collector/tenant mismatch" },
+          "422": { "description": "Invalid heartbeat schema" }
+        }
+      }
+    },
+    "/api/v1/overview": {
+      "get": {
+        "summary": "Fleet overview summary for authenticated tenant",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "parameters": [
+          { "name": "environment_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "region_id", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Fleet health, collector counts, active incidents, health distribution, last update UTC" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/metrics": {
+      "get": {
+        "summary": "Time-series approved metrics ordered strictly by event_time_utc",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "parameters": [
+          { "name": "metric_name", "in": "query", "schema": { "type": "string" } },
+          { "name": "environment_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "source_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "minutes", "in": "query", "schema": { "type": "integer", "default": 60 } }
+        ],
+        "responses": {
+          "200": { "description": "Event-time ordered metric series" }
+        }
+      }
+    },
+    "/api/v1/collectors": {
+      "get": {
+        "summary": "List collectors, 4-state health, staleness, heartbeat age, and outbox queue counts for tenant",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "responses": {
+          "200": { "description": "Tenant collector fleet list" }
+        }
+      }
+    },
+    "/api/v1/incidents": {
+      "get": {
+        "summary": "List correlated incidents with contributing signals and explainable recommendations",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "severity", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Tenant incidents list" }
+        }
+      }
+    },
+    "/api/v1/incidents/{incident_id}": {
+      "get": {
+        "summary": "Detailed incident timeline, correlation explanation, and recommendations",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "parameters": [
+          { "name": "incident_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Incident detail" },
+          "404": { "description": "Incident not found in caller tenant" }
+        }
+      }
+    },
+    "/api/v1/incidents/{incident_id}/simulate-remediation": {
+      "post": {
+        "summary": "Execute policy-checked, human-approved SIMULATED remediation with audit log and rollback plan",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "parameters": [
+          { "name": "incident_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Simulated remediation audit record and rollback plan" }
+        }
+      }
+    },
+    "/api/v1/saas-receipts": {
+      "get": {
+        "summary": "List SaaS-side received metadata records and payload SHA-256 hashes for Egress Proof verification",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Approved metadata records received by SaaS (never contains raw data)" }
+        }
+      }
+    },
+    "/api/v1/reliability": {
+      "get": {
+        "summary": "Measured delivery reliability, duplicate rejections, out-of-order counts, and observed latencies",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "responses": {
+          "200": { "description": "Measured reliability telemetry (unmeasured fields explicitly null / Not measured)" }
+        }
+      }
+    },
+    "/api/v1/architecture/trust-summary": {
+      "get": {
+        "summary": "Active policy version, allow-listed schema fields, regional routing config, and tenant isolation posture",
+        "security": [{ "OperatorTokenAuth": [] }],
+        "responses": {
+          "200": { "description": "Live platform trust configuration" }
+        }
+      }
+    },
+    "/local/v1/egress-proof": {
+      "get": {
+        "summary": "[LOCAL COLLECTOR :8001 ONLY] Inspect raw local events alongside exact serialized outbound JSON & SHA-256 hash",
+        "description": "Served only by Tier 1 collector on 127.0.0.1:8001. NEVER accessible from Tier 2 SaaS.",
+        "responses": {
+          "200": { "description": "List of local egress proof records conforming to contracts/egress_proof.schema.json" }
+        }
+      }
+    },
+    "/local/v1/outbox": {
+      "get": {
+        "summary": "[LOCAL COLLECTOR :8001 ONLY] Inspect local SQLite transactional outbox state, buffered count, retries, and connection status",
+        "responses": {
+          "200": { "description": "Local outbox queue diagnostics" }
+        }
+      }
+    },
+    "/local/v1/inject": {
+      "post": {
+        "summary": "[LOCAL COLLECTOR :8001 ONLY] Inject a synthetic local raw event for live judge scenario demonstrations",
+        "responses": {
+          "202": { "description": "Raw event accepted into Tier 1 local pipeline" }
+        }
+      }
+    }
+  }
+}

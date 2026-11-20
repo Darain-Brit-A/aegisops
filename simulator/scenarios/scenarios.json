@@ -1,0 +1,45 @@
+{
+  "source": "Smart_Observability_Hackathon_Evaluation_Guide_v8.pdf (Section 8)",
+  "scenarios": [
+    {
+      "id": "raw_secret",
+      "title": "Raw log contains a synthetic secret",
+      "expected_behavior": "Sensitive fields (raw_log, password, api_key, hostname, ip_address) remain local in Tier 1; SaaS receives allow-listed metadata with HMAC pseudonym and matching SHA-256 hash."
+    },
+    {
+      "id": "saas_outage",
+      "title": "Collector loses SaaS connectivity",
+      "expected_behavior": "Collector detects outage, buffers canonical payloads in SQLite outbox, marks collector Poor within 60s, and drains backlog on reconnect with zero loss and zero duplicates."
+    },
+    {
+      "id": "failed_logins",
+      "title": "Repeated failed logins",
+      "expected_behavior": "Local collector produces failed_auth_attempts_count and AUTH_FAILURE_BURST without exporting usernames, raw sshd logs, or source IP addresses."
+    },
+    {
+      "id": "network_latency",
+      "title": "Network latency rises",
+      "expected_behavior": "Dashboard displays affected pseudonymous source, severity, event-time latency trend, and Fair/Poor health transition."
+    },
+    {
+      "id": "cpu_baseline_deviation",
+      "title": "CPU or memory deviates from baseline",
+      "expected_behavior": "AIOps flags anomaly via threshold + rolling Median/MAD baseline, explains contributing signals, and recommends investigation."
+    },
+    {
+      "id": "correlated_incident",
+      "title": "Several alerts relate to one incident",
+      "expected_behavior": "Deterministic correlator groups related CPU, memory, and packet loss signals in env-blr-dc1 into one incident, reducing alert noise."
+    },
+    {
+      "id": "duplicate_out_of_order",
+      "title": "Duplicate or out-of-order delivery",
+      "expected_behavior": "Late multi-timezone events are ordered by event_time_utc without corrupting trends; replayed payload_ids are deduplicated idempotently."
+    },
+    {
+      "id": "remediation_proposed",
+      "title": "Simulated remediation is proposed",
+      "expected_behavior": "Operator sees policy check, approves simulated action, immutable audit record is persisted, and rollback plan is displayed (no real infra change)."
+    }
+  ]
+}

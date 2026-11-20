@@ -1,0 +1,25 @@
+# AegisOps Repository Code Ownership
+# Enforces strict four-person module boundaries (see docs/TEAM_OWNERSHIP.md)
+
+# Member 01 — Mishael (Lead Systems Architect, DevOps & Integration Engineer)
+*                       @mishael
+/docs/                  @mishael
+/contracts/             @mishael
+/scripts/               @mishael
+/.github/               @mishael
+/simulator/             @mishael
+/audit/                 @mishael
+/docker-compose.yml     @mishael
+/Makefile               @mishael
+/README.md              @mishael
+/AGENTS.md              @mishael
+/.env.example           @mishael
+
+# Member 02 — Sherwin (Local Collector, Security & Reliability Engineer)
+/collector/             @sherwin
+
+# Member 03 — Praveen (SaaS Backend & AIOps Intelligence Engineer)
+/backend/               @praveen
+
+# Member 04 — Darain (Frontend, UI/UX & Product Experience Engineer)
+/frontend/              @darain

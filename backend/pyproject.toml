@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegisops-backend"
+version = "0.1.0"
+description = "AegisOps Tier 2 Central Multi-Tenant SaaS Backend & AIOps Intelligence."
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.13.0",
+    "fastapi>=0.115.0",
+    "httpx>=0.27.0",
+    "jsonschema>=4.23.0",
+    "numpy>=2.0.0",
+    "psycopg[binary]>=3.2.0",
+    "pydantic>=2.9.0",
+    "sqlalchemy>=2.0.35",
+    "uvicorn>=0.30.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

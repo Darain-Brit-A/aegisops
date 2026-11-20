@@ -1,0 +1,116 @@
+# AegisOps Two-Tier Local Development Stack
+# Notice network isolation:
+#   - `saas-internal`: PostgreSQL + SaaS Backend ONLY. Collector CANNOT connect to PostgreSQL.
+#   - `ingest-boundary`: Trust boundary link between Tier 1 Collector and Tier 2 SaaS API.
+#   - Collector Inspection API binds strictly to 127.0.0.1:8001 on the host for local Egress Proof.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aegisops-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aegisops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_postgres_password_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-aegisops}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - aegisops_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aegisops} -d ${POSTGRES_DB:-aegisops}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - saas-internal
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aegisops-backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-aegisops}:${POSTGRES_PASSWORD:-local_dev_postgres_password_change_me}@postgres:5432/${POSTGRES_DB:-aegisops}
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8000
+      AEGISOPS_REGION_ID: ${AEGISOPS_REGION_ID:-ap-south-1}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas-internal
+      - ingest-boundary
+
+  collector:
+    build:
+      context: ./collector
+      dockerfile: Dockerfile
+    container_name: aegisops-collector
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      COLLECTOR_ID: ${COLLECTOR_ID:-col-acme-blr-01}
+      COLLECTOR_ENVIRONMENT_ID: ${COLLECTOR_ENVIRONMENT_ID:-env-blr-dc1}
+      COLLECTOR_REGION_ID: ${COLLECTOR_REGION_ID:-ap-south-1}
+      COLLECTOR_SAAS_INGEST_URL: http://backend:8000/api/v1/ingest/telemetry
+      COLLECTOR_SAAS_HEARTBEAT_URL: http://backend:8000/api/v1/ingest/heartbeat
+      COLLECTOR_AUTH_TOKEN: ${COLLECTOR_AUTH_TOKEN:-dev-col-token-acme-local-placeholder}
+      COLLECTOR_HMAC_SECRET: ${COLLECTOR_HMAC_SECRET:-local-only-pseudonym-salt-change-me-never-transmit}
+      COLLECTOR_SQLITE_PATH: /var/lib/aegisops-collector/collector_local.db
+      COLLECTOR_INSPECT_HOST: 0.0.0.0
+      COLLECTOR_INSPECT_PORT: 8001
+      COLLECTOR_ADAPTER_MODE: ${COLLECTOR_ADAPTER_MODE:-simulator}
+    ports:
+      # Local-only egress proof & inspection endpoint (never exposed to SaaS)
+      - "127.0.0.1:8001:8001"
+    volumes:
+      # Durable Tier 1 SQLite raw store, egress proof log, and transactional outbox
+      - aegisops_collector_local:/var/lib/aegisops-collector
+      - ./simulator:/app/simulator:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      # Strictly isolated from `saas-internal` (cannot reach PostgreSQL)
+      - ingest-boundary
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aegisops-frontend
+    restart: unless-stopped
+    environment:
+      VITE_SAAS_API_BASE_URL: http://localhost:8000/api/v1
+      VITE_LOCAL_COLLECTOR_INSPECT_URL: http://127.0.0.1:8001
+      VITE_POLL_INTERVAL_MS: 3000
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - ingest-boundary
+
+networks:
+  saas-internal:
+    driver: bridge
+  ingest-boundary:
+    driver: bridge
+
+volumes:
+  aegisops_pgdata:
+  aegisops_collector_local:

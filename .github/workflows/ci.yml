@@ -1,0 +1,107 @@
+name: AegisOps CI
+
+on:
+  push:
+    branches: [main, integration, "feature/**"]
+  pull_request:
+    branches: [main, integration]
+
+jobs:
+  governance-and-contracts:
+    name: Governance, Contracts & Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install validation dependencies
+        run: python -m pip install --upgrade pip jsonschema pydantic
+
+      - name: Validate JSON Schemas & OpenAPI snapshot
+        run: python scripts/audit/verify_contracts.py
+
+      - name: Run repository secret scan
+        run: python scripts/audit/check_secrets.py
+
+      - name: Verify ownership boundaries on PR
+        if: github.event_name == 'pull_request'
+        run: |
+          python scripts/audit/check_ownership.py \
+            --base-ref "origin/${{ github.base_ref }}" \
+            --branch "${{ github.head_ref }}"
+
+  collector-tests:
+    name: Tier 1 Collector Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install collector dependencies
+        run: |
+          python -m pip install --upgrade pip pytest ruff
+          python -m pip install -e ./collector
+      - name: Lint collector
+        run: ruff check collector
+      - name: Test collector
+        run: pytest collector/tests -v
+
+  backend-tests:
+    name: Tier 2 SaaS Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip pytest ruff
+          python -m pip install -e ./backend
+      - name: Lint backend
+        run: ruff check backend
+      - name: Test backend
+        run: pytest backend/tests -v
+
+  frontend-build-and-test:
+    name: Frontend Build & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+      - name: Typecheck & build frontend
+        working-directory: frontend
+        run: npm run build
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --run
+
+  integration-gate:
+    name: Integration Smoke Gate
+    needs: [governance-and-contracts, collector-tests, backend-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip pytest jsonschema
+          python -m pip install -e ./collector
+          python -m pip install -e ./backend
+      - name: Run integration gate
+        run: python scripts/audit/integration_gate.py

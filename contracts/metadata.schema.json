@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegisops.local/contracts/metadata.schema.json",
+  "title": "AegisOps Approved Outbound Telemetry Metadata",
+  "description": "Strict default-deny metadata contract allowed to cross the Tier 1 (Local Collector) -> Tier 2 (Central SaaS) trust boundary. Unknown properties, raw logs, secrets, IPs, hostnames, and arbitrary strings are strictly forbidden.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "payload_id",
+    "collector_id",
+    "tenant_id",
+    "environment_id",
+    "source_id",
+    "event_time_utc",
+    "source_timezone",
+    "event_category",
+    "severity",
+    "health_state",
+    "metric_name",
+    "metric_value",
+    "metric_unit",
+    "policy_version",
+    "event_code",
+    "summary_code"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "payload_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      "description": "Stable UUID generated once before outbox persistence; preserved across retries for idempotent SaaS deduplication."
+    },
+    "collector_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$",
+      "description": "Pseudonymous collector identifier registered with the SaaS."
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$",
+      "description": "Declared tenant identifier. SaaS MUST validate this against the server-bound tenant derived from the authenticated collector credential and reject mismatches."
+    },
+    "environment_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$",
+      "description": "Pseudonymous environment or site identifier."
+    },
+    "region_id": {
+      "type": "string",
+      "enum": ["ap-south-1", "eu-central-1", "us-east-1", "us-west-2"],
+      "description": "Assigned regional ingest/residency identifier."
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^src_[a-f0-9]{16,32}$",
+      "description": "HMAC-salted pseudonymous source identifier derived locally; never a raw hostname or IP address."
+    },
+    "event_time_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?(Z|\\+00:00)$",
+      "description": "UTC ISO-8601 event generation timestamp used for event-time ordering."
+    },
+    "collected_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?(Z|\\+00:00)$",
+      "description": "Optional UTC timestamp when Tier 1 collector received the raw telemetry for latency instrumentation."
+    },
+    "processed_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?(Z|\\+00:00)$",
+      "description": "Optional UTC timestamp when local redaction, analysis, and allow-list policy finished."
+    },
+    "source_timezone": {
+      "type": "string",
+      "pattern": "^(UTC|[A-Za-z_]+/[A-Za-z0-9_+-]+(/[A-Za-z0-9_+-]+)?)$",
+      "minLength": 3,
+      "maxLength": 64,
+      "description": "IANA timezone name of the originating source."
+    },
+    "event_category": {
+      "type": "string",
+      "enum": ["infrastructure", "network", "security", "application", "collector"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warning", "high", "critical"]
+    },
+    "health_state": {
+      "type": "string",
+      "enum": ["Excellent", "Good", "Fair", "Poor"]
+    },
+    "metric_name": {
+      "type": "string",
+      "enum": [
+        "cpu_usage_percent",
+        "memory_usage_percent",
+        "disk_usage_percent",
+        "service_availability_percent",
+        "network_bandwidth_mbps",
+        "network_latency_ms",
+        "network_packet_loss_percent",
+        "network_connectivity_status",
+        "failed_auth_attempts_count",
+        "suspicious_activity_score",
+        "collector_queue_depth"
+      ]
+    },
+    "metric_value": {
+      "type": "number",
+      "minimum": -1000000,
+      "maximum": 1000000000
+    },
+    "metric_unit": {
+      "type": "string",
+      "enum": ["percent", "ms", "mbps", "count", "ratio", "score", "status_code"]
+    },
+    "policy_version": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?$",
+      "maxLength": 16
+    },
+    "event_code": {
+      "type": "string",
+      "enum": [
+        "METRIC_NORMAL",
+        "CPU_THRESHOLD_BREACH",
+        "CPU_ANOMALY",
+        "MEMORY_THRESHOLD_BREACH",
+        "MEMORY_ANOMALY",
+        "DISK_PRESSURE",
+        "SERVICE_DEGRADED",
+        "SERVICE_UNAVAILABLE",
+        "NETWORK_LATENCY_SPIKE",
+        "NETWORK_PACKET_LOSS",
+        "NETWORK_BANDWIDTH_SATURATION",
+        "CONNECTIVITY_LOST",
+        "AUTH_FAILURE_BURST",
+        "SUSPICIOUS_SECURITY_SIGNAL",
+        "RAW_SECRET_REDACTED_LOCALLY"
+      ]
+    },
+    "summary_code": {
+      "type": "string",
+      "enum": [
+        "BASELINE_NOMINAL",
+        "MINOR_VARIANCE",
+        "RESOURCE_DEVIATION",
+        "NETWORK_DEGRADATION",
+        "SECURITY_RISK_ELEVATED",
+        "SERVICE_IMPACT_CRITICAL",
+        "POLICY_REDACTED_SUMMARY"
+      ]
+    },
+    "signal_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000,
+      "description": "Number of local raw events aggregated into this metadata summary."
+    },
+    "redacted_field_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000,
+      "description": "Count of sensitive raw fields stripped locally (never the field values)."
+    },
+    "local_anomaly_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Optional deterministic local robust z-score / deviation magnitude."
+    }
+  }
+}

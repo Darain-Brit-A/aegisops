@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegisops.local/contracts/health.schema.json",
+  "title": "AegisOps Four-State Health Evaluation Contract",
+  "description": "Defines the four-state health model (Excellent, Good, Fair, Poor), stale-data downgrade semantics, and UTC state transition history.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity_type",
+    "entity_id",
+    "tenant_id",
+    "health_state",
+    "evaluated_at_utc",
+    "is_stale",
+    "reason_code",
+    "explanation",
+    "contributing_signals"
+  ],
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "enum": ["fleet", "environment", "collector", "source"]
+    },
+    "entity_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "tenant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"
+    },
+    "health_state": {
+      "type": "string",
+      "enum": ["Excellent", "Good", "Fair", "Poor"]
+    },
+    "previous_state": {
+      "type": ["string", "null"],
+      "enum": ["Excellent", "Good", "Fair", "Poor", null]
+    },
+    "evaluated_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?(Z|\\+00:00)$"
+    },
+    "last_heartbeat_utc": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "is_stale": {
+      "type": "boolean",
+      "description": "True when collector heartbeat or metric freshness exceeds configured thresholds. Stale collectors CANNOT remain Excellent."
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "ALL_NOMINAL",
+        "MINOR_BASELINE_DRIFT",
+        "ELEVATED_RESOURCE_OR_NETWORK",
+        "HEARTBEAT_STALE",
+        "COLLECTOR_OFFLINE",
+        "CRITICAL_DEGRADATION_OR_SECURITY",
+        "NO_TELEMETRY_YET"
+      ]
+    },
+    "explanation": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "contributing_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["metric_name", "metric_value", "threshold_state", "observed_at_utc"],
+        "properties": {
+          "metric_name": { "type": "string" },
+          "metric_value": { "type": "number" },
+          "threshold_state": { "type": "string", "enum": ["Excellent", "Good", "Fair", "Poor"] },
+          "observed_at_utc": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from_state", "to_state", "changed_at_utc", "reason_code", "explanation"],
+        "properties": {
+          "from_state": { "type": ["string", "null"], "enum": ["Excellent", "Good", "Fair", "Poor", null] },
+          "to_state": { "type": "string", "enum": ["Excellent", "Good", "Fair", "Poor"] },
+          "changed_at_utc": { "type": "string", "format": "date-time" },
+          "reason_code": { "type": "string" },
+          "explanation": { "type": "string" }
+        }
+      }
+    }
+  }
+}

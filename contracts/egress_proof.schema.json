@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aegisops.local/contracts/egress_proof.schema.json",
+  "title": "AegisOps Local Egress Proof Record (Tier 1 Local-Only)",
+  "description": "Served exclusively by the Local Collector inspection API (127.0.0.1:8001). NEVER uploaded to or queried by Tier 2 SaaS.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proof_id",
+    "payload_id",
+    "tenant_id",
+    "collector_id",
+    "policy_version",
+    "event_time_utc",
+    "delivery_state",
+    "raw_event_local_only",
+    "redacted_fields",
+    "outbound_payload",
+    "outbound_canonical_json",
+    "payload_sha256"
+  ],
+  "properties": {
+    "proof_id": { "type": "string", "format": "uuid" },
+    "payload_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string" },
+    "collector_id": { "type": "string" },
+    "policy_version": { "type": "string" },
+    "event_time_utc": { "type": "string", "format": "date-time" },
+    "transmitted_at_utc": { "type": ["string", "null"], "format": "date-time" },
+    "acknowledged_at_utc": { "type": ["string", "null"], "format": "date-time" },
+    "delivery_state": {
+      "type": "string",
+      "enum": ["buffered", "transmitting", "delivered", "duplicate_acknowledged", "policy_rejected", "failed_retrying"]
+    },
+    "raw_event_local_only": {
+      "type": "object",
+      "description": "Original raw Tier 1 telemetry event retained locally for side-by-side judge inspection. NEVER crosses trust boundary."
+    },
+    "redacted_fields": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names of sensitive raw fields kept local and excluded from outbound metadata."
+    },
+    "outbound_payload": {
+      "type": ["object", "null"],
+      "description": "Parsed allow-listed metadata payload (null if rejected by local policy)."
+    },
+    "outbound_canonical_json": {
+      "type": ["string", "null"],
+      "description": "Exact canonical UTF-8 JSON string transmitted over HTTP and hashed into payload_sha256."
+    },
+    "payload_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "rejection_reason": {
+      "type": ["string", "null"]
+    }
+  }
+}
