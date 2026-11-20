@@ -34,6 +34,7 @@ TEAM_PROFILES: dict[str, dict[str, Any]] = {
             "README.md",
             "AGENTS.md",
             "docker-compose.yml",
+            "docker-compose.tls.yml",
             "Makefile",
             ".env.example",
             ".gitignore",
@@ -46,7 +47,7 @@ TEAM_PROFILES: dict[str, dict[str, Any]] = {
         "default_tool": "Antigravity Pro",
         "branch_prefix": "feature/sherwin-",
         "allowed_prefixes": ["collector/"],
-        "allowed_exact": {"docs/HANDOFF_SHERWIN.md"},
+        "allowed_exact": {"docs/HANDOFF_SHERWIN.md", "audit/activity.jsonl", "audit/checkpoints/latest_report.md"},
     },
     "praveen": {
         "member_id": "member-03",
@@ -55,7 +56,7 @@ TEAM_PROFILES: dict[str, dict[str, Any]] = {
         "default_tool": "Antigravity Pro",
         "branch_prefix": "feature/praveen-",
         "allowed_prefixes": ["backend/"],
-        "allowed_exact": {"docs/HANDOFF_PRAVEEN.md"},
+        "allowed_exact": {"docs/HANDOFF_PRAVEEN.md", "audit/activity.jsonl", "audit/checkpoints/latest_report.md"},
     },
     "darain": {
         "member_id": "member-04",
@@ -64,7 +65,7 @@ TEAM_PROFILES: dict[str, dict[str, Any]] = {
         "default_tool": "Claude Pro",
         "branch_prefix": "feature/darain-",
         "allowed_prefixes": ["frontend/"],
-        "allowed_exact": {"docs/HANDOFF_DARAIN.md"},
+        "allowed_exact": {"docs/HANDOFF_DARAIN.md", "audit/activity.jsonl", "audit/checkpoints/latest_report.md"},
     },
 }
 
