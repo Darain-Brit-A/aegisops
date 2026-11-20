@@ -1,0 +1,51 @@
+{
+  "measured_at_utc": "2026-11-20T10:21:34Z",
+  "harness": "scripts/validation/test_e2e_full_system.py (in-process Collector -> SaaS)",
+  "scenarios_verified": [
+    "raw_secret_sha256_parity_and_zero_leak",
+    "saas_outage_restart_zero_loss_zero_duplicates",
+    "failed_logins_redacted_locally",
+    "network_latency_spike",
+    "cpu_memory_mad_baseline_anomaly",
+    "multi_signal_correlated_incident",
+    "duplicate_and_out_of_order_multi_timezone",
+    "simulated_remediation_approval_audit_rollback",
+    "cross_tenant_isolation",
+    "collector_offline_detection_under_60s"
+  ],
+  "measured_reliability": {
+    "tenant_id": "tenant-acme-prod",
+    "measurement_note": "Values derived strictly from recorded UTC timestamps. Unmeasured metrics return null.",
+    "total_accepted_events": 20,
+    "duplicate_rejected_count": 1,
+    "out_of_order_count": 1,
+    "collector_offline_detections": 1,
+    "last_reconnect_utc": null,
+    "p50_ingest_latency_ms": 22.62,
+    "p95_ingest_latency_ms": 238.96,
+    "p50_alert_latency_ms": 376.17,
+    "p95_alert_latency_ms": 463.42,
+    "recent_accepted_payload_ids": [
+      "1ef89117-2ab0-4f26-96f7-7218b91e0c74",
+      "4fa23410-4d8f-4fc5-97e0-68847f36d23a",
+      "260fb929-cec9-40c3-9a96-b4cc3d079f78",
+      "1b4cfdd2-d414-4c2b-a3ea-0b7acf331335",
+      "269315bd-edb5-45c4-9278-3c896ed24a7b",
+      "1f431dcd-421a-40ea-ac95-02bb757f7458",
+      "aec4ea73-db3d-490f-a8c9-61a7864f7e3e",
+      "ff2d71c0-8c39-4fe7-9999-9bc20c011249",
+      "255cb235-eec2-41a8-8770-df4ea7299576",
+      "7c5d6bbf-ea54-4995-9f33-5e31fc043312",
+      "d8d45bf7-e583-49d9-91c0-0ea784e30de6",
+      "9585ba85-e29e-4ca4-a35c-e3d054632f64",
+      "d3f61348-fffd-485b-9d4e-4017a161b7fd",
+      "30dca07e-7479-42eb-9bfd-8e3a77f50d84",
+      "61a346e3-7a09-429e-995b-bc2e27f7d98e",
+      "1ce7efd1-614b-4e5e-9f86-456d340ecf17",
+      "2e38ea26-7acc-4310-8f80-e3245ddcdf4a",
+      "25f02895-54a8-4479-a550-dd373209b9c8",
+      "47ff9449-0d30-4d8c-b5ff-effe609b692f",
+      "a60729ce-4bbe-4ecd-8fa9-a238daa35149"
+    ]
+  }
+}

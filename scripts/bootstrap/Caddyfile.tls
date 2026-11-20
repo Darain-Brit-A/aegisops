@@ -1,0 +1,9 @@
+# Caddy TLS 1.3 Reverse Proxy for AegisOps Regional Ingest Boundary (Demo Overlay)
+{
+    auto_https disable_redirects
+}
+
+https://tls-gateway:8443, https://localhost:8443 {
+    tls internal
+    reverse_proxy backend:8000
+}
