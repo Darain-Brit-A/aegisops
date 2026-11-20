@@ -61,6 +61,7 @@ def evaluate_collector_health(
     now = _as_utc(now_utc) or datetime.now(timezone.utc)
     last_hb = _as_utc(collector.last_heartbeat_utc)
     prev_state = collector.health_state
+    prev_connection_state = collector.connection_state
 
     is_stale = False
     reason_code = "ALL_NOMINAL"
@@ -133,17 +134,20 @@ def evaluate_collector_health(
 
     collector.health_state = new_state
     collector.connection_state = connection_state
-    record_transition_if_changed(
-        db,
-        tenant_id=collector.tenant_id,
-        entity_type="collector",
-        entity_id=collector.collector_id,
-        previous_state=prev_state,
-        new_state=new_state,
-        reason_code=reason_code,
-        explanation=explanation,
-        now_utc=now,
-    )
+    became_offline = reason_code == "COLLECTOR_OFFLINE" and prev_connection_state != "offline"
+    if prev_state != new_state or became_offline:
+        db.add(
+            HealthTransition(
+                tenant_id=collector.tenant_id,
+                entity_type="collector",
+                entity_id=collector.collector_id,
+                from_state=prev_state,
+                to_state=new_state,
+                reason_code=reason_code,
+                explanation=explanation,
+                changed_at_utc=now,
+            )
+        )
 
     return {
         "health_state": new_state,

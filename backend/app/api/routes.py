@@ -691,10 +691,10 @@ def create_api_router(get_db_dep: Any, config_provider: Any) -> APIRouter:
 
         ingest_latencies_ms: list[float] = []
         for ev in events:
-            et = _as_utc(ev.event_time_utc)
+            origin_t = _as_utc(ev.collected_at_utc) or _as_utc(ev.event_time_utc)
             it = _as_utc(ev.ingested_at_utc)
-            if et and it and not ev.out_of_order:
-                delta_ms = (it - et).total_seconds() * 1000.0
+            if origin_t and it and not ev.out_of_order:
+                delta_ms = (it - origin_t).total_seconds() * 1000.0
                 if 0.0 <= delta_ms <= 3_600_000.0:
                     ingest_latencies_ms.append(delta_ms)
 

@@ -41,6 +41,7 @@ def main() -> int:
         ("governance_invariants", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "scripts/validation/test_governance_invariants.py", "-q"]),
         ("collector_tests", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "collector/tests", "-q"]),
         ("backend_tests", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "backend/tests", "-q"]),
+        ("e2e_full_system", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "scripts/validation/test_e2e_full_system.py", "-q"]),
         ("smoke_test", [sys.executable, "scripts/validation/smoke_test.py"]),
     ]:
         status, detail = run_step(label, cmd)
