@@ -38,6 +38,7 @@ def main() -> int:
         failures.extend(secret_errs)
 
     for label, cmd in [
+        ("governance_invariants", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "scripts/validation/test_governance_invariants.py", "-q"]),
         ("collector_tests", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "collector/tests", "-q"]),
         ("backend_tests", [sys.executable, "-m", "pytest", "-p", "no:anyio", "-p", "no:cacheprovider", "--import-mode=importlib", "backend/tests", "-q"]),
         ("smoke_test", [sys.executable, "scripts/validation/smoke_test.py"]),

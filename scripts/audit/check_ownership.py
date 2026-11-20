@@ -22,7 +22,9 @@ def infer_actor_from_branch(branch: str) -> str | None:
 
 def is_path_owned(actor: str, rel_path: str) -> bool:
     profile = TEAM_PROFILES[actor]
-    normalized = rel_path.replace("\\", "/").lstrip("./")
+    normalized = rel_path.replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
     if normalized in profile["allowed_exact"]:
         return True
     return any(normalized.startswith(prefix) for prefix in profile["allowed_prefixes"])

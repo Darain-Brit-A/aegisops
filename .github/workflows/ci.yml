@@ -22,13 +22,16 @@ jobs:
           python-version: "3.11"
 
       - name: Install validation dependencies
-        run: python -m pip install --upgrade pip jsonschema pydantic
+        run: python -m pip install --upgrade pip jsonschema pydantic pyyaml pytest
 
       - name: Validate JSON Schemas & OpenAPI snapshot
         run: python scripts/audit/verify_contracts.py
 
       - name: Run repository secret scan
         run: python scripts/audit/check_secrets.py
+
+      - name: Run governance & network isolation invariant tests
+        run: pytest scripts/validation/test_governance_invariants.py -v
 
       - name: Verify ownership boundaries on PR
         if: github.event_name == 'pull_request'
